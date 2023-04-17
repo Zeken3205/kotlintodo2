@@ -1,6 +1,7 @@
 package com.example.kotlintodo2.ui.Scheduler
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,13 +19,16 @@ import com.example.kotlintodo2.utils.TodoAdapter
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.*
 
 class SchedularFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListener,
     TodoAdapter.ToDoAdapterClicksInterface {
 
     private lateinit var binding:FragmentSchedularBinding
     private lateinit var auth: FirebaseAuth
-    private lateinit var databaseRef: DatabaseReference
+    private lateinit var db: FirebaseFirestore
     private lateinit var navController: NavController
     private var popupFragment: AddTodoPopupFragment?=null
     private lateinit var adapter: TodoAdapter
@@ -49,7 +53,7 @@ class SchedularFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClick
     {
         navController= Navigation.findNavController(view)
         auth= FirebaseAuth.getInstance()
-        databaseRef= FirebaseDatabase.getInstance().reference.child("Tasks").child(auth.currentUser?.uid.toString())
+        db = FirebaseFirestore.getInstance()
         binding.recyclerview2.setHasFixedSize(true)
         binding.recyclerview2.layoutManager= LinearLayoutManager(context)
         mList= mutableListOf()
@@ -84,74 +88,93 @@ class SchedularFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClick
 
     }
 
-    private fun getDataFromFirebase(){
-        databaseRef.addValueEventListener(object: ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                mList.clear()
-                for (taskSnapshot in snapshot.children) {
-                    // Convert each child snapshot to a Task object and add it to the list
-                    val task = taskSnapshot.child("name").getValue(String::class.java)
-                    val date = taskSnapshot.child("date").getValue(String::class.java)
-                    val time = taskSnapshot.child("time").getValue(String::class.java)
-                    val taskId = taskSnapshot.key.toString()
-                    if (task!=null&&date!=null&&time!=null) {
-                        mList.add(ToDoData(taskId, task, date, time))
-                    }
+    private fun getDataFromFirebase() {
+        val collectionRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks")
+
+        val currentDate = Date()
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy")
+        val formattedDate = dateFormat.format(currentDate)
+
+        collectionRef.whereEqualTo("date", formattedDate)
+            .addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
+                    Log.w(AddTodoPopupFragment.TAG, "Listen failed", exception)
+                    return@addSnapshotListener
                 }
-                adapter.notifyDataSetChanged()
+
+                if (snapshot != null) {
+                    val taskList = mutableListOf<ToDoData>()
+                    for (doc in snapshot.documents) {
+                        val task = doc.getString("name")
+                        val date = doc.getString("date")
+                        val time = doc.getString("time")
+                        val taskId = doc.id
+
+                        if (task != null && date != null && time != null) {
+                            taskList.add(ToDoData(taskId, task, date, time))
+                        }
+                    }
+                    mList.clear()
+                    mList.addAll(taskList)
+                    adapter.notifyDataSetChanged()
+                } else {
+                    Log.d(AddTodoPopupFragment.TAG, "Current data: null")
+                }
             }
-
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(context,error.message, Toast.LENGTH_SHORT).show()
-            }
-
-        })
-
     }
 
-    override fun onSaveTask(
-        todo: String,
-        popuptodotaskname: TextInputEditText,
-        popupdate: EditText,
-        popuptime: TextView
-    ) {
-        val newTaskRef = databaseRef.push()
-        val taskMap = HashMap<String, Any>()
-        taskMap["name"] = popuptodotaskname.text.toString()
-        taskMap["date"] = cdate.toString()
-        taskMap["time"] = popuptime.text.toString()
-        newTaskRef.setValue(taskMap).addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                // Do something else, like displaying a success message
-                Toast.makeText(context,"Added", Toast.LENGTH_SHORT)
-            } else {
-                // Write operation failed, so display an error message
-                Toast.makeText(context,"Failed to add", Toast.LENGTH_SHORT)
+
+    override fun onSaveTask(todo: String, popuptodotaskname: TextInputEditText, popupdate: EditText, popuptime: EditText) {
+
+        val collectionRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks")
+
+        val currentDate = Date()
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy")
+        val formattedDate = dateFormat.format(currentDate)
+
+        val newTaskRef = collectionRef.document()
+
+        val taskMap = hashMapOf(
+            "name" to popuptodotaskname.text.toString(),
+            "date" to formattedDate,
+            "time" to popuptime.text.toString()
+        )
+
+        newTaskRef.set(taskMap)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    // Do something else, like displaying a success message
+                    Toast.makeText(context, "Added", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Write operation failed, so display an error message
+                    Toast.makeText(context, "Failed to add", Toast.LENGTH_SHORT).show()
+                }
+                popuptodotaskname.text = null
+                popupdate.text = null
+                popuptime.text = null
+                popupFragment!!.dismiss()
             }
-            popuptodotaskname.text = null
-            popupdate.text=null
-            popuptime.text=null
-            popupFragment!!.dismiss()
-        }
     }
 
     override fun onUpdateTask(
         toDoData: ToDoData,
         popuptodotaskname: TextInputEditText,
         popupdate: EditText,
-        popuptime: TextView
+        popuptime: EditText
     ) {
         val taskId = toDoData.taskid
         val name = popuptodotaskname.text.toString()
         val date = popupdate.text.toString()
         val time = popuptime.text.toString()
 
-        val updates = HashMap<String, Any>()
-        updates["name"] = name
-        updates["date"] = date
-        updates["time"] = time
+        val taskRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks").document(taskId)
 
-        databaseRef.child(taskId).updateChildren(updates)
+        val batch = db.batch()
+        batch.update(taskRef, "name", name)
+        batch.update(taskRef, "date", date)
+        batch.update(taskRef, "time", time)
+
+        batch.commit()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     Toast.makeText(context, "Updated", Toast.LENGTH_SHORT).show()
@@ -166,15 +189,18 @@ class SchedularFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClick
             }
     }
 
+
+
     override fun onDeleteTaskBtnClicked(toDoData: ToDoData) {
-        databaseRef.child(toDoData.taskid).removeValue().addOnCompleteListener{
-            if(it.isSuccessful){
-                Toast.makeText(context,"Deleted", Toast.LENGTH_SHORT).show()
-                adapter.notifyDataSetChanged()
-            }else{
-                Toast.makeText(context,it.exception?.message, Toast.LENGTH_SHORT).show()
+        val taskId = toDoData.taskid
+        val documentRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks").document(taskId)
+        documentRef.delete()
+            .addOnSuccessListener {
+                Toast.makeText(context, "Deleted", Toast.LENGTH_SHORT).show()
             }
-        }
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Failed to delete: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     override fun onEditTaskBtnClicked(toDoData: ToDoData) {
@@ -184,4 +210,5 @@ class SchedularFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClick
         popupFragment!!.setListener(this)
         popupFragment!!.show(childFragmentManager,AddTodoPopupFragment.TAG)
     }
+
 }

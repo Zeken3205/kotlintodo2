@@ -2,6 +2,7 @@ package com.example.kotlintodo2.ui
 
 import android.app.TimePickerDialog
 import android.os.Bundle
+import android.text.Editable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,7 +23,7 @@ class AddTodoPopupFragment : BottomSheetDialogFragment(),TimePickerDialog.OnTime
     private lateinit var listener: DialogNextButtonClickListener
     private var toDoData: ToDoData? = null
 
-    private lateinit var ctime:String
+
 
 
     fun setListener(listener: HomeFragment) {
@@ -77,7 +78,7 @@ class AddTodoPopupFragment : BottomSheetDialogFragment(),TimePickerDialog.OnTime
         binding.popupsave.setOnClickListener {
             val todotask =binding.popuptodotaskname.text.toString()
             val tododate=binding.popupdate.text.toString()
-            val todotime=ctime
+            val todotime=binding.popuptime.text.toString()
             if (todotask.isNotEmpty()) {
                 if(toDoData==null){
                     listener.onSaveTask(todotask, binding.popuptodotaskname,binding.popupdate,binding.popuptime)
@@ -103,19 +104,23 @@ class AddTodoPopupFragment : BottomSheetDialogFragment(),TimePickerDialog.OnTime
             todo: String,
             popuptodotaskname: TextInputEditText,
             popupdate: EditText,
-            popuptime: TextView
+            popuptime: EditText
         )
         fun onUpdateTask(
             toDoData: ToDoData,
             popuptodotaskname: TextInputEditText,
             popupdate: EditText,
-            popuptime: TextView
+            popuptime: EditText
         )
     }
 
     override fun onTimeSet(p0: TimePicker?, p1: Int, p2: Int) {
-        var savedHour:Int =p1
-        var savedMinute:Int=p2
-        binding.popuptime.text="$savedHour:$savedMinute"
+        val savedHour:Int =p1
+        val savedMinute:Int=p2
+        val timeString = "$savedHour:$savedMinute"
+        val editable = Editable.Factory.getInstance().newEditable(timeString)
+        binding.popuptime.text = editable
     }
+
+
 }

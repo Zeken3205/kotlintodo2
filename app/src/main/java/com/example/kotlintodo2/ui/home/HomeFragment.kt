@@ -115,7 +115,7 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
     }
 
 
-    override fun onSaveTask(todo: String, popuptodotaskname: TextInputEditText, popupdate: EditText, popuptime: TextView) {
+    override fun onSaveTask(todo: String, popuptodotaskname: TextInputEditText, popupdate: EditText, popuptime: EditText) {
 
         val collectionRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks")
 
@@ -128,7 +128,7 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
         val taskMap = hashMapOf(
             "name" to popuptodotaskname.text.toString(),
             "date" to formattedDate,
-            "time" to popuptime
+            "time" to popuptime.text.toString()
         )
 
         newTaskRef.set(taskMap)
@@ -151,7 +151,7 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
         toDoData: ToDoData,
         popuptodotaskname: TextInputEditText,
         popupdate: EditText,
-        popuptime: TextView
+        popuptime: EditText
     ) {
         val taskId = toDoData.taskid
         val name = popuptodotaskname.text.toString()

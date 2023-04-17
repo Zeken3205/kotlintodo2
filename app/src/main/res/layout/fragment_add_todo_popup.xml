@@ -33,18 +33,18 @@
             android:layout_height="wrap_content"
             android:src="@drawable/calendericon"
             android:layout_marginRight="50dp"/>
-        <TextView
+        <EditText
             android:layout_width="100dp"
             android:layout_height="wrap_content"
             android:id="@+id/popuptime"
-            />
+            android:textSize="10sp"/>
         <ImageButton
             android:layout_width="wrap_content"
-            android:id="@+id/btntime"
             android:layout_height="wrap_content"
-            android:src="@drawable/clockicon"
+            android:id="@+id/btntime"
             android:background="@color/white"
-            />
+            android:src="@drawable/clockicon"/>
+
     </LinearLayout>
     <com.google.android.material.button.MaterialButton
         android:layout_width="match_parent"
