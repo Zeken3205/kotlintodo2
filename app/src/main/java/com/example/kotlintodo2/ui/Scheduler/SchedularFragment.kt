@@ -84,6 +84,7 @@ class SchedularFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClick
             else{
                 cdate="$i3/${i2+1}/$i"
             }
+
         }
 
     }
@@ -91,11 +92,7 @@ class SchedularFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClick
     private fun getDataFromFirebase() {
         val collectionRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks")
 
-        val currentDate = Date()
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy")
-        val formattedDate = dateFormat.format(currentDate)
-
-        collectionRef.whereEqualTo("date", formattedDate)
+        collectionRef.orderBy("date")
             .addSnapshotListener { snapshot, exception ->
                 if (exception != null) {
                     Log.w(AddTodoPopupFragment.TAG, "Listen failed", exception)
@@ -124,19 +121,16 @@ class SchedularFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClick
     }
 
 
+
     override fun onSaveTask(todo: String, popuptodotaskname: TextInputEditText, popupdate: EditText, popuptime: EditText) {
 
         val collectionRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks")
 
-        val currentDate = Date()
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy")
-        val formattedDate = dateFormat.format(currentDate)
 
         val newTaskRef = collectionRef.document()
-
         val taskMap = hashMapOf(
             "name" to popuptodotaskname.text.toString(),
-            "date" to formattedDate,
+            "date" to cdate,
             "time" to popuptime.text.toString()
         )
 

@@ -135,7 +135,7 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     // Do something else, like displaying a success message
-                    Toast.makeText(context, "Fuck", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Added", Toast.LENGTH_SHORT).show()
                 } else {
                     // Write operation failed, so display an error message
                     Toast.makeText(context, "Failed to add", Toast.LENGTH_SHORT).show()
@@ -179,8 +179,6 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
                 popupFragment?.dismiss()
             }
     }
-
-
 
     override fun onDeleteTaskBtnClicked(toDoData: ToDoData) {
         val taskId = toDoData.taskid

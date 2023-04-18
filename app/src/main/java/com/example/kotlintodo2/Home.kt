@@ -4,7 +4,6 @@ import android.os.Bundle
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.kotlintodo2.databinding.ActivityHomeBinding
@@ -27,14 +26,21 @@ class Home : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_activity_home)
 
         navView.setOnItemSelectedListener {
-            when(it.itemId){
-                R.id.nav_scheduler->navController.navigate(R.id.action_navigation_home_to_navigation_dashboard)
-                R.id.nav_home->navController.navigate(R.id.action_navigation_dashboard_to_navigation_home)
-                else->{
-
+            when (it.itemId) {
+                R.id.nav_scheduler -> {
+                    if (navController.currentDestination?.id != R.id.navigation_dashboard) {
+                        navController.navigate(R.id.action_navigation_home_to_navigation_dashboard)
+                    }
+                    true
                 }
+                R.id.nav_home -> {
+                    if (navController.currentDestination?.id != R.id.navigation_home) {
+                        navController.navigate(R.id.action_navigation_dashboard_to_navigation_home)
+                    }
+                    true
+                }
+                else -> false
             }
-            true
         }
     }
 }
