@@ -18,6 +18,7 @@ import com.example.kotlintodo2.ui.AddTodoPopupFragment.Companion.TAG
 import com.example.kotlintodo2.utils.ToDoData
 import com.example.kotlintodo2.utils.TodoAdapter
 import com.google.android.material.textfield.TextInputEditText
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.firestore.DocumentChange
@@ -83,7 +84,7 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
         val collectionRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks")
 
         val currentDate = Date()
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy")
+        val dateFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
         val formattedDate = dateFormat.format(currentDate)
 
         collectionRef.whereEqualTo("date", formattedDate)
@@ -115,20 +116,24 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
     }
 
 
-    override fun onSaveTask(todo: String, popuptodotaskname: TextInputEditText, popupdate: EditText, popuptime: EditText) {
+    override fun onSaveTask(todo: String, popuptodotaskname: TextInputEditText, popupdate: String, popuptime: String) {
 
         val collectionRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks")
 
-        val currentDate = Date()
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy")
-        val formattedDate = dateFormat.format(currentDate)
-
         val newTaskRef = collectionRef.document()
+
+        val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH)
+        val date = dateFormat.parse(popupdate)
+        val timeFormat = SimpleDateFormat("h:mm:ss a z", Locale.ENGLISH)
+        val time = timeFormat.parse(popuptime)
+        val dateTime = Date(date.time + time.time)
+        val timestamp = Timestamp(dateTime)
 
         val taskMap = hashMapOf(
             "name" to popuptodotaskname.text.toString(),
-            "date" to formattedDate,
-            "time" to popuptime.text.toString()
+            "date" to popupdate,
+            "time" to popuptime,
+            "timestamp" to timestamp
         )
 
         newTaskRef.set(taskMap)
@@ -141,8 +146,7 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
                     Toast.makeText(context, "Failed to add", Toast.LENGTH_SHORT).show()
                 }
                 popuptodotaskname.text = null
-                popupdate.text = null
-                popuptime.text = null
+
                 popupFragment!!.dismiss()
             }
     }
@@ -150,20 +154,18 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
     override fun onUpdateTask(
         toDoData: ToDoData,
         popuptodotaskname: TextInputEditText,
-        popupdate: EditText,
-        popuptime: EditText
+        popupdate: String,
+        popuptime: String
     ) {
         val taskId = toDoData.taskid
         val name = popuptodotaskname.text.toString()
-        val date = popupdate.text.toString()
-        val time = popuptime.text.toString()
+
 
         val taskRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks").document(taskId)
 
         val batch = db.batch()
         batch.update(taskRef, "name", name)
-        batch.update(taskRef, "date", date)
-        batch.update(taskRef, "time", time)
+
 
         batch.commit()
             .addOnCompleteListener { task ->
@@ -174,8 +176,6 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
                     Toast.makeText(context, "Failed to update", Toast.LENGTH_SHORT).show()
                 }
                 popuptodotaskname.text = null
-                popupdate.text = null
-                popuptime.text = null
                 popupFragment?.dismiss()
             }
     }
@@ -200,4 +200,3 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
         popupFragment!!.show(childFragmentManager,AddTodoPopupFragment.TAG)
     }
 }
-

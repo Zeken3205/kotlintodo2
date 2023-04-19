@@ -13,25 +13,14 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" >
 
-            <CalendarView
-                android:id="@+id/calendarView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="0dp"
-                android:background="@color/white"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerview2"
+                android:layout_width="409dp"
+                android:layout_height="630dp"
+                android:layout_marginTop="48dp"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:layout_width="409dp"
-                android:layout_height="330dp"
-                android:layout_marginTop="3dp"
-                android:id="@+id/recyclerview2"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/calendarView" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/addtaskbtn"
