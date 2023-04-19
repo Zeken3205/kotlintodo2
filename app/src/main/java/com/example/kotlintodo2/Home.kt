@@ -29,13 +29,34 @@ class Home : AppCompatActivity() {
             when (it.itemId) {
                 R.id.nav_scheduler -> {
                     if (navController.currentDestination?.id != R.id.navigation_dashboard) {
-                        navController.navigate(R.id.action_navigation_home_to_navigation_dashboard)
+                        if (navController.currentDestination?.id != R.id.pendingFragment) {
+                            navController.navigate(R.id.action_navigation_home_to_navigation_dashboard)
+                        }
+                        else if (navController.currentDestination?.id != R.id.navigation_home) {
+                            navController.navigate(R.id.action_pendingFragment_to_navigation_dashboard)
+                        }
                     }
                     true
                 }
                 R.id.nav_home -> {
                     if (navController.currentDestination?.id != R.id.navigation_home) {
-                        navController.navigate(R.id.action_navigation_dashboard_to_navigation_home)
+                        if (navController.currentDestination?.id != R.id.pendingFragment) {
+                            navController.navigate(R.id.action_navigation_dashboard_to_navigation_home)
+                        }
+                        else if (navController.currentDestination?.id != R.id.navigation_dashboard) {
+                            navController.navigate(R.id.action_pendingFragment_to_navigation_home)
+                        }
+                    }
+                    true
+                }
+                R.id.nav_pending -> {
+                    if (navController.currentDestination?.id != R.id.pendingFragment) {
+                        if (navController.currentDestination?.id != R.id.nav_home) {
+                            navController.navigate(R.id.action_navigation_dashboard_to_pendingFragment)
+                        }
+                        else if (navController.currentDestination?.id != R.id.navigation_dashboard) {
+                            navController.navigate(R.id.action_navigation_home_to_pendingFragment)
+                        }
                     }
                     true
                 }

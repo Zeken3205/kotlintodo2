@@ -11,9 +11,9 @@
         android:title="Schedule"/>
 
     <item
-        android:id="@+id/nav_note"
+        android:id="@+id/nav_pending"
         android:icon="@drawable/noteicon"
-        android:title="Notes"/>
+        android:title="Pending"/>
     <item
         android:id="@+id/nav_profile"
         android:icon="@drawable/personnavicon"

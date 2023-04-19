@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import com.example.kotlintodo2.databinding.FragmentAddTodoPopupBinding
+import com.example.kotlintodo2.ui.Pending.PendingFragment
 import com.example.kotlintodo2.ui.Scheduler.SchedularFragment
 import com.example.kotlintodo2.ui.home.HomeFragment
 import com.example.kotlintodo2.utils.ToDoData
@@ -32,17 +33,21 @@ class AddTodoPopupFragment : BottomSheetDialogFragment(), DatePickerDialog.OnDat
     fun setListener(listener: SchedularFragment) {
         this.listener = listener;
     }
+    fun setListener(listener: PendingFragment) {
+        this.listener = listener;
+    }
 
     companion object {
         const val TAG = "AddTodoPopupFragment"
 
         @JvmStatic
-        fun newInstance(taskId: String, task: String,date:String,time:String) = AddTodoPopupFragment().apply {
+        fun newInstance(taskId: String, task: String,date:String,time:String,completed:Boolean) = AddTodoPopupFragment().apply {
             arguments = Bundle().apply {
                 putString("taskId", taskId)
                 putString("task", task)
                 putString("date",date)
                 putString("time",time)
+                putBoolean("Completed",completed)
             }
         }
     }
@@ -60,13 +65,15 @@ class AddTodoPopupFragment : BottomSheetDialogFragment(), DatePickerDialog.OnDat
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         if (arguments != null) {
-            toDoData = ToDoData(
-                arguments?.getString("taskId").toString(),
-                arguments?.getString("task").toString(),
-                arguments?.getString("date").toString(),
-                arguments?.getString("time").toString(),
-
+            toDoData = arguments?.getBoolean("Completed")?.let {
+                ToDoData(
+                    arguments?.getString("taskId").toString(),
+                    arguments?.getString("task").toString(),
+                    arguments?.getString("date").toString(),
+                    arguments?.getString("time").toString(),
+                    it
                 )
+            }
             binding.popuptodotaskname.setText(toDoData?.task)
             binding.popupdate.setText(toDoData?.date)
             binding.popuptime.setText(toDoData?.time)
@@ -162,7 +169,5 @@ class AddTodoPopupFragment : BottomSheetDialogFragment(), DatePickerDialog.OnDat
         val date = dateFormat.format(calendar.time)
         binding.popupdate.setText(date)
     }
-
-
 
 }

@@ -79,8 +79,10 @@ class SchedularFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClick
 
     private fun getDataFromFirebase() {
         val collectionRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks")
-
-        collectionRef.orderBy("date")
+        val currentDate = Date()
+        val dateFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
+        val formattedDate = dateFormat.format(currentDate)
+        collectionRef.orderBy("date").orderBy("timestamp").whereGreaterThan("date",formattedDate)
             .addSnapshotListener { snapshot, exception ->
                 if (exception != null) {
                     Log.w(AddTodoPopupFragment.TAG, "Listen failed", exception)
@@ -193,9 +195,10 @@ class SchedularFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClick
     override fun onEditTaskBtnClicked(toDoData: ToDoData) {
         if(popupFragment!=null)
             childFragmentManager.beginTransaction().remove(popupFragment!!).commit()
-        popupFragment=AddTodoPopupFragment.newInstance(toDoData.taskid,toDoData.task,toDoData.date,toDoData.time)
+        popupFragment=AddTodoPopupFragment.newInstance(toDoData.taskid,toDoData.task,toDoData.date,toDoData.time,toDoData.completed)
         popupFragment!!.setListener(this)
         popupFragment!!.show(childFragmentManager,AddTodoPopupFragment.TAG)
     }
+
 
 }

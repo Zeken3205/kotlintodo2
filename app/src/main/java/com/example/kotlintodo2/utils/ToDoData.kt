@@ -7,5 +7,6 @@ data class ToDoData(
     val taskid:String,
     var task:String,
     var date:String,
-    var time:String
+    var time:String,
+    var completed:Boolean=false
 )

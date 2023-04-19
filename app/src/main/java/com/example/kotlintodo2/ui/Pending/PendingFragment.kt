@@ -1,85 +1,63 @@
-package com.example.kotlintodo2.ui.home
+package com.example.kotlintodo2.ui.Pending
 
 import android.os.Bundle
 import android.util.Log
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
-import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.kotlintodo2.R
 import com.example.kotlintodo2.databinding.FragmentHomeBinding
+import com.example.kotlintodo2.databinding.FragmentPendingBinding
 import com.example.kotlintodo2.ui.AddTodoPopupFragment
-import com.example.kotlintodo2.ui.AddTodoPopupFragment.Companion.TAG
 import com.example.kotlintodo2.utils.ToDoData
 import com.example.kotlintodo2.utils.TodoAdapter
 import com.google.android.material.textfield.TextInputEditText
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.*
-import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.HashMap
 
-class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListener,
-    TodoAdapter.ToDoAdapterClicksInterface {
+
+class PendingFragment : Fragment(),TodoAdapter.ToDoAdapterClicksInterface,
+    AddTodoPopupFragment.DialogNextButtonClickListener {
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
     private lateinit var navController: NavController
-    private lateinit var binding: FragmentHomeBinding
+    private lateinit var binding: FragmentPendingBinding
     private var popupFragment: AddTodoPopupFragment?=null
     private lateinit var adapter: TodoAdapter
     private lateinit var mList:MutableList<ToDoData>
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        binding=FragmentHomeBinding.inflate(inflater,container,false)
+        // Inflate the layout for this fragment
+        binding=FragmentPendingBinding.inflate(inflater,container,false)
         return binding.root
     }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         init(view)
         getDataFromFirebase()
-        registerEvents()
     }
-
     private fun init(view:View)
     {
         navController= Navigation.findNavController(view)
         auth= FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
-        binding.recyclerView.setHasFixedSize(true)
-        binding.recyclerView.layoutManager= LinearLayoutManager(context)
+        binding.recyclerview3.setHasFixedSize(true)
+        binding.recyclerview3.layoutManager= LinearLayoutManager(context)
         mList= mutableListOf()
         adapter= TodoAdapter(mList)
         adapter.setListener(this)
-        binding.recyclerView.adapter=adapter
+        binding.recyclerview3.adapter=adapter
     }
-
-    private fun registerEvents()
-    {
-        binding.addtaskbtn.setOnClickListener {
-            if (popupFragment!=null)
-                childFragmentManager.beginTransaction().remove(popupFragment!!).commit()
-            popupFragment= AddTodoPopupFragment();
-            popupFragment!!.setListener(this)
-            popupFragment!!.show(
-                childFragmentManager,
-                AddTodoPopupFragment.TAG
-            )
-        }
-
-    }
-
     private fun getDataFromFirebase() {
         val collectionRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks")
 
@@ -87,10 +65,10 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
         val dateFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
         val formattedDate = dateFormat.format(currentDate)
 
-        collectionRef.whereEqualTo("date", formattedDate)
+        collectionRef.whereLessThan("date", formattedDate)
             .addSnapshotListener { snapshot, exception ->
                 if (exception != null) {
-                    Log.w(TAG, "Listen failed", exception)
+                    Log.w(AddTodoPopupFragment.TAG, "Listen failed", exception)
                     return@addSnapshotListener
                 }
 
@@ -110,73 +88,8 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
                     mList.addAll(taskList)
                     adapter.notifyDataSetChanged()
                 } else {
-                    Log.d(TAG, "Current data: null")
+                    Log.d(AddTodoPopupFragment.TAG, "Current data: null")
                 }
-            }
-    }
-
-
-    override fun onSaveTask(todo: String, popuptodotaskname: TextInputEditText, popupdate: String, popuptime: String) {
-
-        val collectionRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks")
-
-        val newTaskRef = collectionRef.document()
-
-        val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH)
-        val date = dateFormat.parse(popupdate)
-        val timeFormat = SimpleDateFormat("h:mm:ss a z", Locale.ENGLISH)
-        val time = timeFormat.parse(popuptime)
-        val dateTime = Date(date.time + time.time)
-        val timestamp = Timestamp(dateTime)
-
-        val taskMap = hashMapOf(
-            "name" to popuptodotaskname.text.toString(),
-            "date" to popupdate,
-            "time" to popuptime,
-            "timestamp" to timestamp
-        )
-
-        newTaskRef.set(taskMap)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    // Do something else, like displaying a success message
-                    Toast.makeText(context, "Added", Toast.LENGTH_SHORT).show()
-                } else {
-                    // Write operation failed, so display an error message
-                    Toast.makeText(context, "Failed to add", Toast.LENGTH_SHORT).show()
-                }
-                popuptodotaskname.text = null
-
-                popupFragment!!.dismiss()
-            }
-    }
-
-    override fun onUpdateTask(
-        toDoData: ToDoData,
-        popuptodotaskname: TextInputEditText,
-        popupdate: String,
-        popuptime: String
-    ) {
-        val taskId = toDoData.taskid
-        val name = popuptodotaskname.text.toString()
-
-
-        val taskRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks").document(taskId)
-
-        val batch = db.batch()
-        batch.update(taskRef, "name", name)
-
-
-        batch.commit()
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    Toast.makeText(context, "Updated", Toast.LENGTH_SHORT).show()
-                    adapter.notifyDataSetChanged()
-                } else {
-                    Toast.makeText(context, "Failed to update", Toast.LENGTH_SHORT).show()
-                }
-                popuptodotaskname.text = null
-                popupFragment?.dismiss()
             }
     }
 
@@ -200,4 +113,21 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
         popupFragment!!.show(childFragmentManager,AddTodoPopupFragment.TAG)
     }
 
+    override fun onSaveTask(
+        todo: String,
+        popuptodotaskname: TextInputEditText,
+        popupdate: String,
+        popuptime: String
+    ) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onUpdateTask(
+        toDoData: ToDoData,
+        popuptodotaskname: TextInputEditText,
+        popupdate: String,
+        popuptime: String
+    ) {
+        TODO("Not yet implemented")
+    }
 }
