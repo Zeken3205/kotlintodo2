@@ -79,36 +79,40 @@ class SchedularFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClick
 
     private fun getDataFromFirebase() {
         val collectionRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks")
+
         val currentDate = Date()
         val dateFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
         val formattedDate = dateFormat.format(currentDate)
-        collectionRef.orderBy("date").orderBy("timestamp").whereGreaterThan("date",formattedDate)
-            .addSnapshotListener { snapshot, exception ->
-                if (exception != null) {
-                    Log.w(AddTodoPopupFragment.TAG, "Listen failed", exception)
-                    return@addSnapshotListener
-                }
+        val currentParsedDate = dateFormat.parse(formattedDate)
+        val query = collectionRef.orderBy("timestamp")
 
-                if (snapshot != null) {
-                    val taskList = mutableListOf<ToDoData>()
-                    for (doc in snapshot.documents) {
-                        val task = doc.getString("name")
-                        val date = doc.getString("date")
-                        val time = doc.getString("time")
-                        val taskId = doc.id
-
-                        if (task != null && date != null && time != null) {
-                            taskList.add(ToDoData(taskId, task, date, time))
-                        }
-                    }
-                    mList.clear()
-                    mList.addAll(taskList)
-                    adapter.notifyDataSetChanged()
-                } else {
-                    Log.d(AddTodoPopupFragment.TAG, "Current data: null")
-                }
+        query.addSnapshotListener { snapshot, exception ->
+            if (exception != null) {
+                Log.w(AddTodoPopupFragment.TAG, "Listen failed", exception)
+                return@addSnapshotListener
             }
+
+            if (snapshot != null) {
+                val taskList = mutableListOf<ToDoData>()
+                for (doc in snapshot.documents) {
+                    val task = doc.getString("name")
+                    val date = doc.getString("date")
+                    val time = doc.getString("time")
+                    val taskId = doc.id
+                    val dateparsed = dateFormat.parse(date)
+                    if (task != null && date != null && time != null && dateparsed.after(currentParsedDate)) {
+                        taskList.add(ToDoData(taskId, task, date, time))
+                    }
+                }
+                mList.clear()
+                mList.addAll(taskList)
+                adapter.notifyDataSetChanged()
+            } else {
+                Log.d(AddTodoPopupFragment.TAG, "Current data: null")
+            }
+        }
     }
+
 
 
 
@@ -143,7 +147,6 @@ class SchedularFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClick
                     Toast.makeText(context, "Failed to add", Toast.LENGTH_SHORT).show()
                 }
                 popuptodotaskname.text = null
-
                 popupFragment!!.dismiss()
             }
     }

@@ -86,9 +86,10 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
         val currentDate = Date()
         val dateFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
         val formattedDate = dateFormat.format(currentDate)
+        val query = collectionRef.orderBy("timestamp")
+             // sort by due_date field
 
-        collectionRef.whereEqualTo("date", formattedDate)
-            .addSnapshotListener { snapshot, exception ->
+        query.addSnapshotListener { snapshot, exception ->
                 if (exception != null) {
                     Log.w(TAG, "Listen failed", exception)
                     return@addSnapshotListener
@@ -102,7 +103,7 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
                         val time = doc.getString("time")
                         val taskId = doc.id
 
-                        if (task != null && date != null && time != null) {
+                        if (task != null && date != null && time != null&& date==formattedDate) {
                             taskList.add(ToDoData(taskId, task, date, time))
                         }
                     }
@@ -124,16 +125,26 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
 
         val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH)
         val date = dateFormat.parse(popupdate)
-        val timeFormat = SimpleDateFormat("h:mm:ss a z", Locale.ENGLISH)
+
+        val timeFormat = SimpleDateFormat("h:mm:ss a", Locale.ENGLISH)
+        timeFormat.timeZone = TimeZone.getDefault()
         val time = timeFormat.parse(popuptime)
-        val dateTime = Date(date.time + time.time)
-        val timestamp = Timestamp(dateTime)
+
+        val dateTime = Calendar.getInstance()
+        dateTime.timeZone = TimeZone.getDefault()
+        dateTime.time = time
+        dateTime.set(Calendar.YEAR, date.year + 1900)
+        dateTime.set(Calendar.MONTH, date.month)
+        dateTime.set(Calendar.DAY_OF_MONTH, date.date)
+
+        val timestamp = Timestamp(dateTime.time)
 
         val taskMap = hashMapOf(
             "name" to popuptodotaskname.text.toString(),
             "date" to popupdate,
             "time" to popuptime,
-            "timestamp" to timestamp
+            "timestamp" to timestamp,
+            "checked" to false
         )
 
         newTaskRef.set(taskMap)
@@ -146,10 +157,10 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
                     Toast.makeText(context, "Failed to add", Toast.LENGTH_SHORT).show()
                 }
                 popuptodotaskname.text = null
-
                 popupFragment!!.dismiss()
             }
     }
+
 
     override fun onUpdateTask(
         toDoData: ToDoData,

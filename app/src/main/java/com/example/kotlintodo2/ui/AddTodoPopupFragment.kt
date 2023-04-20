@@ -121,9 +121,9 @@ class AddTodoPopupFragment : BottomSheetDialogFragment(), DatePickerDialog.OnDat
             val hour = calendar.get(Calendar.HOUR_OF_DAY)
             val minute = calendar.get(Calendar.MINUTE)
             val timePickerDialog = TimePickerDialog(requireContext(), { view, hourOfDay, minute ->
-                val timeFormat = SimpleDateFormat("hh:mm:ss a z", Locale.getDefault())
+                val timeFormat = SimpleDateFormat("hh:mm:ss a", Locale.getDefault())
+
                 val calendar = Calendar.getInstance()
-                calendar.timeZone = TimeZone.getTimeZone("UTC+5:30")
                 calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
                 calendar.set(Calendar.MINUTE, minute)
                 val time = timeFormat.format(calendar.time)
@@ -131,7 +131,6 @@ class AddTodoPopupFragment : BottomSheetDialogFragment(), DatePickerDialog.OnDat
             }, hour, minute, false)
             timePickerDialog.show()
         }
-
     }
 
     interface DialogNextButtonClickListener {

@@ -44,6 +44,9 @@ class TodoAdapter(private val list:MutableList<ToDoData>) : RecyclerView.Adapter
                     if (binding.checkbox.isChecked) {
                         binding.todoTask.setTextColor(Color.GRAY)
                         checked = true
+
+//                        Update Database in Firebase
+//                        Set again all data
                     } else {
                         binding.todoTask.setTextColor(Color.BLACK)
                         checked = false

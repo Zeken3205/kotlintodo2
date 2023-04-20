@@ -64,8 +64,9 @@ class PendingFragment : Fragment(),TodoAdapter.ToDoAdapterClicksInterface,
         val currentDate = Date()
         val dateFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
         val formattedDate = dateFormat.format(currentDate)
+        val currentParsedDate = dateFormat.parse(formattedDate)
 
-        collectionRef.whereLessThan("date", formattedDate)
+        collectionRef.orderBy("timestamp")
             .addSnapshotListener { snapshot, exception ->
                 if (exception != null) {
                     Log.w(AddTodoPopupFragment.TAG, "Listen failed", exception)
@@ -79,8 +80,8 @@ class PendingFragment : Fragment(),TodoAdapter.ToDoAdapterClicksInterface,
                         val date = doc.getString("date")
                         val time = doc.getString("time")
                         val taskId = doc.id
-
-                        if (task != null && date != null && time != null) {
+                        val dateparsed = dateFormat.parse(date)
+                        if (task != null && date != null && time != null && dateparsed.before(currentParsedDate)) {
                             taskList.add(ToDoData(taskId, task, date, time))
                         }
                     }
