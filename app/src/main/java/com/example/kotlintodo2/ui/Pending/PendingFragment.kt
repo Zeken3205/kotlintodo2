@@ -10,8 +10,6 @@ import android.widget.Toast
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.kotlintodo2.R
-import com.example.kotlintodo2.databinding.FragmentHomeBinding
 import com.example.kotlintodo2.databinding.FragmentPendingBinding
 import com.example.kotlintodo2.ui.AddTodoPopupFragment
 import com.example.kotlintodo2.utils.ToDoData
@@ -36,7 +34,7 @@ class PendingFragment : Fragment(),TodoAdapter.ToDoAdapterClicksInterface,
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         // Inflate the layout for this fragment
         binding=FragmentPendingBinding.inflate(inflater,container,false)
         return binding.root
@@ -79,10 +77,26 @@ class PendingFragment : Fragment(),TodoAdapter.ToDoAdapterClicksInterface,
                         val task = doc.getString("name")
                         val date = doc.getString("date")
                         val time = doc.getString("time")
+                        val completed = doc.getBoolean("completed")
                         val taskId = doc.id
-                        val dateparsed = dateFormat.parse(date)
-                        if (task != null && date != null && time != null && dateparsed.before(currentParsedDate)) {
-                            taskList.add(ToDoData(taskId, task, date, time))
+                        val dateparsed = date?.let { dateFormat.parse(it) }
+                        if (dateparsed != null) {
+                            if (task != null && date!= null && time != null && dateparsed.before(currentParsedDate)) {
+                                if (completed == true) {
+                                    // Delete the task
+                                    val documentRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks").document(taskId)
+                                    documentRef.delete()
+                                        .addOnSuccessListener {
+                                            Toast.makeText(context, "Deleted completed task", Toast.LENGTH_SHORT).show()
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Toast.makeText(context, "Failed to delete completed task: ${e.message}", Toast.LENGTH_SHORT).show()
+                                        }
+                                } else {
+                                    // Add the task to the list
+                                    taskList.add(ToDoData(taskId, task, date, time))
+                                }
+                            }
                         }
                     }
                     mList.clear()
@@ -93,6 +107,7 @@ class PendingFragment : Fragment(),TodoAdapter.ToDoAdapterClicksInterface,
                 }
             }
     }
+
 
     override fun onDeleteTaskBtnClicked(toDoData: ToDoData) {
         val taskId = toDoData.taskid

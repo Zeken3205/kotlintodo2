@@ -21,6 +21,9 @@
         <action
             android:id="@+id/action_navigation_home_to_pendingFragment"
             app:destination="@id/pendingFragment" />
+        <action
+            android:id="@+id/action_navigation_home_to_profileFragment"
+            app:destination="@id/profileFragment" />
     </fragment>
 
     <fragment
@@ -37,6 +40,9 @@
         <action
             android:id="@+id/action_navigation_dashboard_to_pendingFragment"
             app:destination="@id/pendingFragment" />
+        <action
+            android:id="@+id/action_navigation_dashboard_to_profileFragment"
+            app:destination="@id/profileFragment" />
     </fragment>
     <fragment
         android:id="@+id/pendingFragment"
@@ -52,6 +58,55 @@
         <action
             android:id="@+id/action_pendingFragment_self"
             app:destination="@id/pendingFragment" />
+        <action
+            android:id="@+id/action_pendingFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.kotlintodo2.ui.profile.ProfileFragment"
+        android:label="fragment_profile"
+        tools:layout="@layout/fragment_profile" >
+        <action
+            android:id="@+id/action_profileFragment_to_navigation_home"
+            app:destination="@id/navigation_home" />
+        <action
+            android:id="@+id/action_profileFragment_to_navigation_dashboard"
+            app:destination="@id/navigation_dashboard" />
+        <action
+            android:id="@+id/action_profileFragment_to_pendingFragment"
+            app:destination="@id/pendingFragment" />
+        <action
+            android:id="@+id/action_profileFragment_self"
+            app:destination="@id/profileFragment" />
+    </fragment>
+
+    <action
+        android:id="@+id/action_global_navigation_home"
+        app:destination="@id/navigation_home"
+        app:launchSingleTop="true"
+        app:popUpTo="@id/mobile_navigation"
+        app:popUpToInclusive="true" />
+
+    <action
+        android:id="@+id/action_global_navigation_dashboard"
+        app:destination="@id/navigation_dashboard"
+        app:launchSingleTop="true"
+        app:popUpTo="@id/mobile_navigation"
+        app:popUpToInclusive="true" />
+
+    <action
+        android:id="@+id/action_global_pendingFragment"
+        app:destination="@id/pendingFragment"
+        app:launchSingleTop="true"
+        app:popUpTo="@id/mobile_navigation"
+        app:popUpToInclusive="true" />
+    <action
+        android:id="@+id/action_global_profileFragment"
+        app:destination="@id/profileFragment"
+        app:launchSingleTop="true"
+        app:popUpTo="@id/mobile_navigation"
+        app:popUpToInclusive="true" />
+
 
 </navigation>

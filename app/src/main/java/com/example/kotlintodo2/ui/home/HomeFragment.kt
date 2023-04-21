@@ -8,6 +8,8 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import com.google.firebase.firestore.Query
+
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
@@ -82,7 +84,6 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
 
     private fun getDataFromFirebase() {
         val collectionRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks")
-
         val currentDate = Date()
         val dateFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
         val formattedDate = dateFormat.format(currentDate)
@@ -90,30 +91,34 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
              // sort by due_date field
 
         query.addSnapshotListener { snapshot, exception ->
-                if (exception != null) {
-                    Log.w(TAG, "Listen failed", exception)
-                    return@addSnapshotListener
-                }
-
-                if (snapshot != null) {
-                    val taskList = mutableListOf<ToDoData>()
-                    for (doc in snapshot.documents) {
-                        val task = doc.getString("name")
-                        val date = doc.getString("date")
-                        val time = doc.getString("time")
-                        val taskId = doc.id
-
-                        if (task != null && date != null && time != null&& date==formattedDate) {
-                            taskList.add(ToDoData(taskId, task, date, time))
-                        }
-                    }
-                    mList.clear()
-                    mList.addAll(taskList)
-                    adapter.notifyDataSetChanged()
-                } else {
-                    Log.d(TAG, "Current data: null")
-                }
+            if (exception != null) {
+                Log.w(TAG, "Listen failed", exception)
+                return@addSnapshotListener
             }
+
+            if (snapshot != null) {
+                val taskList = mutableListOf<ToDoData>()
+                for (doc in snapshot.documents) {
+                    val task = doc.getString("name")
+                    val date = doc.getString("date")
+                    val time = doc.getString("time")
+                    val completed = doc.getBoolean("completed") ?: false
+                    val taskId = doc.id
+
+                    if (task != null && date != null && time != null && date == formattedDate) {
+                        taskList.add(ToDoData(taskId, task, date, time, completed))
+                    }
+                }
+                // Sort the task list so completed tasks are at the bottom
+                //taskList.sortBy { !it.completed }
+
+                mList.clear()
+                mList.addAll(taskList)
+                adapter.notifyDataSetChanged()
+            } else {
+                Log.d(TAG, "Current data: null")
+            }
+        }
     }
 
 
@@ -143,8 +148,7 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
             "name" to popuptodotaskname.text.toString(),
             "date" to popupdate,
             "time" to popuptime,
-            "timestamp" to timestamp,
-            "checked" to false
+            "timestamp" to timestamp
         )
 
         newTaskRef.set(taskMap)

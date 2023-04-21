@@ -99,9 +99,11 @@ class SchedularFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClick
                     val date = doc.getString("date")
                     val time = doc.getString("time")
                     val taskId = doc.id
-                    val dateparsed = dateFormat.parse(date)
-                    if (task != null && date != null && time != null && dateparsed.after(currentParsedDate)) {
-                        taskList.add(ToDoData(taskId, task, date, time))
+                    val dateparsed = date?.let { dateFormat.parse(it) }
+                    if (dateparsed != null) {
+                        if (task != null && date != null && time != null && dateparsed.after(currentParsedDate)) {
+                            taskList.add(ToDoData(taskId, task, date, time))
+                        }
                     }
                 }
                 mList.clear()
@@ -120,21 +122,29 @@ class SchedularFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClick
 
         val collectionRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks")
 
-
         val newTaskRef = collectionRef.document()
 
         val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH)
         val date = dateFormat.parse(popupdate)
-        val timeFormat = SimpleDateFormat("h:mm:ss a z", Locale.ENGLISH)
+
+        val timeFormat = SimpleDateFormat("h:mm:ss a", Locale.ENGLISH)
+        timeFormat.timeZone = TimeZone.getDefault()
         val time = timeFormat.parse(popuptime)
-        val dateTime = Date(date.time + time.time)
-        val timestamp = Timestamp(dateTime)
+
+        val dateTime = Calendar.getInstance()
+        dateTime.timeZone = TimeZone.getDefault()
+        dateTime.time = time
+        dateTime.set(Calendar.YEAR, date.year + 1900)
+        dateTime.set(Calendar.MONTH, date.month)
+        dateTime.set(Calendar.DAY_OF_MONTH, date.date)
+
+        val timestamp = Timestamp(dateTime.time)
 
         val taskMap = hashMapOf(
             "name" to popuptodotaskname.text.toString(),
             "date" to popupdate,
             "time" to popuptime,
-            "timestamp" to timestamp
+            "timestamp" to timestamp,
         )
 
         newTaskRef.set(taskMap)
