@@ -42,7 +42,9 @@ class PendingFragment : Fragment(),TodoAdapter.ToDoAdapterClicksInterface,
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         init(view)
-        getDataFromFirebase()
+        if (isAdded) {
+            getDataFromFirebase()
+        }
     }
     private fun init(view:View)
     {
@@ -57,7 +59,9 @@ class PendingFragment : Fragment(),TodoAdapter.ToDoAdapterClicksInterface,
         binding.recyclerview3.adapter=adapter
     }
     private fun getDataFromFirebase() {
-        val collectionRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks")
+        val collectionRef = db.collection("users")
+            .document(auth.currentUser?.uid.toString())
+            .collection("tasks")
 
         val currentDate = Date()
         val dateFormat = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
@@ -81,19 +85,29 @@ class PendingFragment : Fragment(),TodoAdapter.ToDoAdapterClicksInterface,
                         val taskId = doc.id
                         val dateparsed = date?.let { dateFormat.parse(it) }
                         if (dateparsed != null) {
-                            if (task != null && date!= null && time != null && dateparsed.before(currentParsedDate)) {
+                            if (task != null && date != null && time != null && dateparsed.before(currentParsedDate)) {
                                 if (completed == true) {
-                                    // Delete the task
-                                    val documentRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks").document(taskId)
+                                    val documentRef = db.collection("users")
+                                        .document(auth.currentUser?.uid.toString())
+                                        .collection("tasks")
+                                        .document(taskId)
+
                                     documentRef.delete()
                                         .addOnSuccessListener {
-                                            Toast.makeText(context, "Deleted completed task", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(
+                                                activity?.applicationContext,
+                                                "Deleted completed task",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         }
                                         .addOnFailureListener { e ->
-                                            Toast.makeText(context, "Failed to delete completed task: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(
+                                                activity?.applicationContext,
+                                                "Failed to delete completed task: ${e.message}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         }
                                 } else {
-                                    // Add the task to the list
                                     taskList.add(ToDoData(taskId, task, date, time))
                                 }
                             }

@@ -5,11 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
-import com.google.firebase.firestore.Query
-
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
@@ -22,13 +18,18 @@ import com.example.kotlintodo2.utils.TodoAdapter
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.*
-import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
 import java.text.SimpleDateFormat
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import androidx.annotation.RequiresApi
+import com.example.kotlintodo2.ui.NotificationReceiver
+import java.time.LocalTime
+
 import java.util.*
-import kotlin.collections.HashMap
 
 class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListener,
     TodoAdapter.ToDoAdapterClicksInterface {
@@ -39,6 +40,7 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
     private var popupFragment: AddTodoPopupFragment?=null
     private lateinit var adapter: TodoAdapter
     private lateinit var mList:MutableList<ToDoData>
+    private lateinit var timestamp: Timestamp
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -103,11 +105,14 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
                     val date = doc.getString("date")
                     val time = doc.getString("time")
                     val completed = doc.getBoolean("completed") ?: false
+                    val timestamp=doc.getTimestamp("timestamp")
+
                     val taskId = doc.id
 
                     if (task != null && date != null && time != null && date == formattedDate) {
                         taskList.add(ToDoData(taskId, task, date, time, completed))
                     }
+
                 }
                 // Sort the task list so completed tasks are at the bottom
                 //taskList.sortBy { !it.completed }
@@ -120,6 +125,74 @@ class HomeFragment : Fragment(), AddTodoPopupFragment.DialogNextButtonClickListe
             }
         }
     }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun scheduleNotification(context: Context) {
+        val collectionRef =
+            db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks")
+        val query = collectionRef.orderBy("timestamp")
+
+        query.addSnapshotListener { snapshot, exception ->
+            if (exception != null) {
+                Log.w(TAG, "Listen failed", exception)
+                return@addSnapshotListener
+            }
+
+            if (snapshot != null) {
+                val firstDocument = snapshot.documents.firstOrNull()
+                if (firstDocument != null) {
+
+                    timestamp = firstDocument.getTimestamp("timestamp")!!
+
+                }
+            }
+        }
+
+        if (mList.isNotEmpty()) {
+            if (timestamp == getCurrentTimestamp()) {
+                val task = mList[0];
+
+                if (task != null) {
+                    val name = task.task
+                    val time = task.time as LocalTime
+
+                    val calendar = Calendar.getInstance()
+                    calendar.timeInMillis = System.currentTimeMillis()
+                    calendar.set(Calendar.HOUR_OF_DAY, time.hour)
+                    calendar.set(Calendar.MINUTE, time.minute)
+                    calendar.set(Calendar.SECOND, 0)
+                    calendar.set(Calendar.MILLISECOND, 0)
+
+                    val alarmManager =
+                        context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                    val intent = Intent(context, NotificationReceiver::class.java).apply {
+                        putExtra("name", name)
+                        putExtra("time", time.toString())
+                    }
+                    val pendingIntent = PendingIntent.getBroadcast(
+                        context,
+                        0,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                    )
+
+                    alarmManager.setExact(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                }
+
+            }
+        }
+    }
+
+    private fun getCurrentTimestamp(): Timestamp {
+        val calendar = Calendar.getInstance()
+        val timestamp = Timestamp(calendar.time)
+        return timestamp
+    }
+
 
 
     override fun onSaveTask(todo: String, popuptodotaskname: TextInputEditText, popupdate: String, popuptime: String) {

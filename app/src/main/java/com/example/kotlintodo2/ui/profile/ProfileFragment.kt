@@ -6,14 +6,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-
 import androidx.fragment.app.Fragment
-import com.example.kotlintodo2.LoginActivity
 import com.example.kotlintodo2.SplashActivity
-
 import com.example.kotlintodo2.databinding.FragmentProfileBinding
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.ktx.Firebase
 
 class ProfileFragment : Fragment() {
 

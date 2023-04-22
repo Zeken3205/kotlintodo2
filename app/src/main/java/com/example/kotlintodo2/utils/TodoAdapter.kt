@@ -52,6 +52,7 @@ class TodoAdapter(private val list: MutableList<ToDoData>) :
                 binding.todoTask.text = this.task
                 binding.todoTime.text = this.time
                 binding.todoDate.text = this.date
+                binding.checkbox.isChecked=this.completed
 
                 binding.deleteTask.setOnClickListener {
                     listener?.onDeleteTaskBtnClicked(this)

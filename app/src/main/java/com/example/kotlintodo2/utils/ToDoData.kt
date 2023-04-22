@@ -1,7 +1,7 @@
 package com.example.kotlintodo2.utils
 
 import com.google.firebase.Timestamp
-import java.util.Date
+
 //task id and task value from firebase
 data class ToDoData(
     val taskid:String,
@@ -9,4 +9,5 @@ data class ToDoData(
     var date:String,
     var time:String,
     var completed:Boolean=false
+
 )
