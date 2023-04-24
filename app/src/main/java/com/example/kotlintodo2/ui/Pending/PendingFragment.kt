@@ -94,18 +94,24 @@ class PendingFragment : Fragment(),TodoAdapter.ToDoAdapterClicksInterface,
 
                                     documentRef.delete()
                                         .addOnSuccessListener {
-                                            Toast.makeText(
-                                                activity?.applicationContext,
-                                                "Deleted completed task",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
+                                            if (isAdded) {
+                                                Toast.makeText(
+                                                    requireContext(),
+                                                    "Deleted completed task",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+
                                         }
                                         .addOnFailureListener { e ->
-                                            Toast.makeText(
-                                                activity?.applicationContext,
-                                                "Failed to delete completed task: ${e.message}",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
+                                            if (isAdded) {
+                                                Toast.makeText(
+                                                    requireContext(),
+                                                    "Failed to delete completed task: ${e.message}",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+
                                         }
                                 } else {
                                     taskList.add(ToDoData(taskId, task, date, time))
@@ -158,6 +164,26 @@ class PendingFragment : Fragment(),TodoAdapter.ToDoAdapterClicksInterface,
         popupdate: String,
         popuptime: String
     ) {
-        TODO("Not yet implemented")
+        val taskId = toDoData.taskid
+        val name = popuptodotaskname.text.toString()
+
+
+        val taskRef = db.collection("users").document(auth.currentUser?.uid.toString()).collection("tasks").document(taskId)
+
+        val batch = db.batch()
+        batch.update(taskRef, "name", name)
+
+
+        batch.commit()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Toast.makeText(context, "Updated", Toast.LENGTH_SHORT).show()
+                    adapter.notifyDataSetChanged()
+                } else {
+                    Toast.makeText(context, "Failed to update", Toast.LENGTH_SHORT).show()
+                }
+                popuptodotaskname.text = null
+                popupFragment?.dismiss()
+            }
     }
 }

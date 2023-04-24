@@ -7,6 +7,18 @@
 
         android:background="@color/Primary"
         tools:context=".ui.Scheduler.SchedularFragment">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/open_sans"
+        android:gravity="center"
+        android:text="Upcoming Task"
+        android:textColor="@color/white"
+        android:textSize="35sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constraintLayout"
@@ -16,6 +28,7 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerview2"
                 android:layout_width="409dp"
+                android:padding="8dp"
                 android:layout_height="630dp"
                 android:layout_marginTop="48dp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -26,13 +39,13 @@
                 android:id="@+id/addtaskbtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="60dp"
+                android:layout_marginBottom="80dp"
                 android:backgroundTint="@color/white"
                 android:contentDescription="@string/app_name"
                 android:src="@drawable/add_icon"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.904"
+                app:layout_constraintHorizontal_bias="0.921"
                 app:layout_constraintStart_toStartOf="parent"
                 app:maxImageSize="40dp"
                 app:tint="@color/Primary" />
