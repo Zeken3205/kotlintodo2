@@ -85,7 +85,7 @@ class AddTodoPopupFragment : BottomSheetDialogFragment(), DatePickerDialog.OnDat
             val todotask =binding.popuptodotaskname.text.toString()
             val tododate=binding.popupdate.text.toString()
             val todotime=binding.popuptime.text.toString()
-            if (todotask.isNotEmpty()) {
+            if (todotask.isNotEmpty()&&tododate.isNotEmpty()&&todotime.isNotEmpty()) {
                 if(toDoData==null){
                     listener.onSaveTask(todotask, binding.popuptodotaskname,binding.popupdate.text.toString(),binding.popuptime.text.toString())
                 }else{
